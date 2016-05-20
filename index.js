@@ -23,12 +23,6 @@ function serializeXML(graph, done) {
             prefixes[prefix] = rdf.prefixes[prefix]
         })
 
-        var rootNode = {
-            _attr: {
-                'xmlns:rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-            }
-        }
-
         var subjectNodes = Object.create(null)
 
         graph.forEach(serializeTriple)
