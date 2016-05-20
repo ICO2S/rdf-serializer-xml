@@ -121,8 +121,6 @@ function serializeXML(graph, done) {
             }
         }
 
-        console.log(subjectNodes)
-
         var attr = {}
 
         for(var prefix in prefixes)
