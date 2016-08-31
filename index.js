@@ -24,20 +24,30 @@ function serializeXML(graph, done) {
         })
 
         var subjectNodes = Object.create(null)
+        var blankNodes = Object.create(null)
 
         graph.forEach(serializeTriple)
 
         function serializeTriple(triple) {
 
-            if(triple.subject.interfaceName !== 'NamedNode')
-                throw new Error('triple subject must be a NamedNode')
+            var subject,
+                subjectNode;
+            if (triple.subject.interfaceName === 'BlankNode') {
+                subject = triple.subject.nominalValue
 
-            var subject = triple.subject.nominalValue
+                subjectNode = blankNodes[subject]
 
-            var subjectNode = subjectNodes[subject]
+                if (subjectNode === undefined)
+                    subjectNode = blankNodes[subject] = []
+            }
+            else {
+                subject = triple.subject.nominalValue
 
-            if(subjectNode === undefined)
-                subjectNode = subjectNodes[subject] = []
+                subjectNode = subjectNodes[subject]
+
+                if (subjectNode === undefined)
+                    subjectNode = subjectNodes[subject] = []
+            }
 
             if(triple.predicate.interfaceName !== 'NamedNode')
                 throw new Error('predicate must be a NamedNode')
@@ -57,6 +67,13 @@ function serializeXML(graph, done) {
                     return {
                         _attr: {
                             'rdf:resource': object.nominalValue
+                        }
+                    }
+
+                case 'BlankNode':
+                    return {
+                        _attr: {
+                            'rdf:nodeID': "_:" + object.nominalValue
                         }
                     }
 
@@ -140,6 +157,19 @@ function serializeXML(graph, done) {
                             ].concat(subjectNodes[subject])
                         }
                     })
+            ).concat(
+                Object.keys(blankNodes)
+                    .map(function (subject) {
+                        return {
+                            'rdf:Description': [
+                                {
+                                    _attr: {
+                                        'rdf:nodeID': "_:" + subject
+                                    }
+                                }
+                            ].concat(blankNodes[subject])
+                        }
+                    })
             )
         }, {
             declaration: true,
@@ -160,7 +190,7 @@ XMLSerializer.prototype.serialize = serializeXML
 var instance = new XMLSerializer()
 
 for (var property in instance) {
-  XMLSerializer[property] = instance[property]
+    XMLSerializer[property] = instance[property]
 }
 
 module.exports = XMLSerializer
